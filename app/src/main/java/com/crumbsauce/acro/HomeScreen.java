@@ -32,7 +32,9 @@ public class HomeScreen extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_home_screen);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -51,20 +53,10 @@ public class HomeScreen extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
+        mGoogleApiClient = Util.getGoogleApiClient(this, this, this);
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(
-                GoogleSignInOptions.DEFAULT_SIGN_IN
-        )
-                .requestEmail()
-                .requestIdToken("346961808175-ji8aoge8npivkifclbutiu57aip6voph.apps.googleusercontent.com")
-                .build();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
     }
 
     @Override

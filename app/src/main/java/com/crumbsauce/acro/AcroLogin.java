@@ -30,21 +30,10 @@ public class AcroLogin extends AppCompatActivity implements
 
         findViewById(R.id.sign_in_button).setOnClickListener(this);
 
-        // Request ID token to be sent to backend server and authenticate requests
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(
-                GoogleSignInOptions.DEFAULT_SIGN_IN
-        )
-                .requestEmail()
-                .requestIdToken("346961808175-ji8aoge8npivkifclbutiu57aip6voph.apps.googleusercontent.com")
-                .build();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
+        mGoogleApiClient = Util.getGoogleApiClient(this, this , this);
 
         SignInButton button = (SignInButton) findViewById(R.id.sign_in_button);
-        button.setScopes(gso.getScopeArray());
+        button.setScopes(Util.getGoogleSignInOptions().getScopeArray());
 
         Log.d(LOG_TAG, "onCreateFinished");
     }
