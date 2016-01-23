@@ -1,0 +1,51 @@
+{
+  "project_info": {
+    "project_id": "acro-android",
+    "project_number": "346961808175",
+    "name": "Acro-Android"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:346961808175:android:52d2cc8a2abae88c",
+        "client_id": "android:com.crumbsauce.acro",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.crumbsauce.acro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "346961808175-uu2293n970ir3n1q2qdltcb9dg8qmvkd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.crumbsauce.acro",
+            "certificate_hash": "05375716D22F39AA6861A1B6590F2A6A6AB9CFEC"
+          }
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 1,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}
