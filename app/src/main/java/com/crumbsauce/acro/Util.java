@@ -6,11 +6,14 @@ import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 class Util {
     private static GoogleSignInOptions mGoogleSignInOptions;
+
+    private static GoogleSignInAccount currentUserAccount;
 
     public static Intent navigateHome() {
         Intent moveToHome = new Intent(Intent.ACTION_MAIN);
@@ -39,6 +42,14 @@ class Util {
             initSettings();
         }
         return mGoogleSignInOptions;
+    }
+
+    public static GoogleSignInAccount getCurrentUserAccount() {
+        return currentUserAccount;
+    }
+
+    public static void setCurrentUserAccount(GoogleSignInAccount currentUserAccount) {
+        Util.currentUserAccount = currentUserAccount;
     }
 
     private static void initSettings() {

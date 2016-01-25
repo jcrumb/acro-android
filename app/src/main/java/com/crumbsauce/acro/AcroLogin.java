@@ -80,6 +80,7 @@ public class AcroLogin extends AppCompatActivity implements
         if (r.isSuccess()) {
             Log.v(LOG_TAG, "Successful login");
             GoogleSignInAccount acct = r.getSignInAccount();
+            Util.setCurrentUserAccount(acct);
 
             Log.d(LOG_TAG, "Name: " + acct.getDisplayName());
             Log.d(LOG_TAG, "Email: " + acct.getEmail());

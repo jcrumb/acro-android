@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -57,6 +58,13 @@ public class HomeScreen extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        View header = navigationView.getHeaderView(0);
+        TextView name = (TextView) header.findViewById(R.id.name_display);
+        TextView email = (TextView) header.findViewById(R.id.email_display);
+
+        email.setText(Util.getCurrentUserAccount().getEmail());
+        name.setText(Util.getCurrentUserAccount().getDisplayName());
     }
 
     @Override
@@ -128,6 +136,8 @@ public class HomeScreen extends AppCompatActivity
                         }
                     }
             );
+        } else {
+            Log.e(LOG_TAG, "Failed to sign out - not connected");
         }
     }
 
