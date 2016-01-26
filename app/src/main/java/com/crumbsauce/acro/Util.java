@@ -13,6 +13,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 class Util {
     private static GoogleSignInOptions mGoogleSignInOptions;
 
+    private static String sessionUserToken;
     private static GoogleSignInAccount currentUserAccount;
 
     public static Intent navigateHome() {
@@ -29,12 +30,10 @@ class Util {
             initSettings();
         }
 
-        GoogleApiClient c = new GoogleApiClient.Builder(context)
+        return new GoogleApiClient.Builder(context)
                 .enableAutoManage(fragmentActivity, listener)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, mGoogleSignInOptions)
                 .build();
-
-        return c;
     }
 
     public static GoogleSignInOptions getGoogleSignInOptions() {
@@ -50,6 +49,16 @@ class Util {
 
     public static void setCurrentUserAccount(GoogleSignInAccount currentUserAccount) {
         Util.currentUserAccount = currentUserAccount;
+    }
+
+    public static String getSessionUserToken() {
+        return sessionUserToken;
+    }
+
+    public static String getSessionUserEmail() { return Util.getCurrentUserAccount().getEmail(); }
+
+    public static void setSessionUserToken(String sessionUserToken) {
+        Util.sessionUserToken = sessionUserToken;
     }
 
     private static void initSettings() {
