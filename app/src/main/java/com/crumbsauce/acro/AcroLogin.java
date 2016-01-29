@@ -5,7 +5,9 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -23,6 +25,7 @@ public class AcroLogin extends AppCompatActivity implements
     private static final int RC_SIGN_IN = 9001;
     private static final String LOG_TAG = "LOG_IN_OUT";
     private SignInButton signInButton;
+    private Backend backend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +36,7 @@ public class AcroLogin extends AppCompatActivity implements
 
         signInButton = (SignInButton) findViewById(R.id.sign_in_button);
         mGoogleApiClient = Util.getGoogleApiClient(this, this , this);
+        backend = new Backend();
 
         signInButton.setScopes(Util.getGoogleSignInOptions().getScopeArray());
 
@@ -83,14 +87,12 @@ public class AcroLogin extends AppCompatActivity implements
             GoogleSignInAccount acct = r.getSignInAccount();
             Util.setCurrentUserAccount(acct);
 
-            Log.d(LOG_TAG, "Name: " + acct.getDisplayName());
-            Log.d(LOG_TAG, "Email: " + acct.getEmail());
+            Log.d(LOG_TAG, "Name:          " + acct.getDisplayName());
+            Log.d(LOG_TAG, "Email:         " + acct.getEmail());
             Log.d(LOG_TAG, "Backend Token: " + acct.getIdToken());
-            Log.d(LOG_TAG, "User ID: " + acct.getId());
+            Log.d(LOG_TAG, "User ID:       " + acct.getId());
 
-            Backend b = Backend.getInstance();
-
-            b.logInWithTokenAsync(this, acct.getIdToken()).execute();
+            backend.logInWithTokenAsync(this, acct.getIdToken()).execute();
 
             signInButton.setEnabled(false);
         } else {
@@ -101,7 +103,11 @@ public class AcroLogin extends AppCompatActivity implements
     @Override
     public void receiveLoginResult(String result) {
         if (result.equals(Backend.ERROR_STRING)) {
-            Snackbar.make(findViewById(android.R.id.content), "An error has occurred logging in, please try again", Snackbar.LENGTH_SHORT);
+            Toast.makeText(
+                    this,
+                    "An error occurred logging in, please try again",
+                    Toast.LENGTH_LONG
+            ).show();
 
             signInButton.setEnabled(true);
         } else {

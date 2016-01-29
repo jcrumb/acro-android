@@ -12,4 +12,12 @@
     tools:context="com.crumbsauce.acro.HomeScreen"
     tools:showIn="@layout/app_bar_home_screen">
 
+    <ToggleButton
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/trackingToggle"
+        android:checked="false"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 </RelativeLayout>

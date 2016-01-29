@@ -4,6 +4,7 @@ package com.crumbsauce.acro;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -59,6 +60,10 @@ class Util {
 
     public static void setSessionUserToken(String sessionUserToken) {
         Util.sessionUserToken = sessionUserToken;
+    }
+
+    public static void makeToast(Context c, String text) {
+        Toast.makeText(c, text, Toast.LENGTH_LONG).show();
     }
 
     private static void initSettings() {
