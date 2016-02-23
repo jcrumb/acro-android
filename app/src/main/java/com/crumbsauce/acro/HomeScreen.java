@@ -16,6 +16,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 
+import com.crumbsauce.acro.backend.ApiCallStatusReceiver;
+import com.crumbsauce.acro.backend.Backend;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -162,7 +164,6 @@ public class HomeScreen extends AppCompatActivity
         switch (method) {
             case "/tracking/begin":
                 if (ok) {
-//                    backend.startHeartbeats();
                     Util.makeToast(this, "Tracking started");
                 } else {
                     Util.makeToast(this, "An error occurred starting tracking, please try again");

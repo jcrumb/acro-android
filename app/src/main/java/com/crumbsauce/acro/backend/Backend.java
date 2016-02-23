@@ -1,4 +1,4 @@
-package com.crumbsauce.acro;
+package com.crumbsauce.acro.backend;
 
 
 import android.content.Context;
@@ -24,14 +24,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
-interface LogInResultHandler {
-    void receiveLoginResult(String result);
-}
-
-interface ApiCallStatusReceiver {
-    void receiveCallStatus(boolean ok, String method);
-}
 
 
 public class Backend implements
@@ -198,7 +190,6 @@ public class Backend implements
             }
         };
     }
-
 
     public AsyncTask<Void, Void, Boolean> stopTrackingAsync(final ApiCallStatusReceiver callback) {
         nullCheck();
