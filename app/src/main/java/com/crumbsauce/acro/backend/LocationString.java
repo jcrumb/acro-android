@@ -1,4 +1,4 @@
-package com.crumbsauce.acro;
+package com.crumbsauce.acro.backend;
 
 import android.location.Location;
 
