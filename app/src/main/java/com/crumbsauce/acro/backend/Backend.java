@@ -167,9 +167,10 @@ public class Backend implements
         };
     }
 
-    public AsyncTask<Void, Void, Boolean> startTrackingAsync(final ApiCallStatusReceiver callback) {
+    public void startTrackingAsync(final ApiCallStatusReceiver<Void> callback) {
         nullCheck();
-        return new AsyncTask<Void, Void, Boolean>() {
+
+        new AsyncTask<Void, Void, Boolean>() {
             @Override
             protected Boolean doInBackground(Void... params) {
                 boolean success = false;
@@ -185,15 +186,20 @@ public class Backend implements
 
             @Override
             protected void onPostExecute(Boolean ok) {
-                if (ok) { tracking = true; startHeartbeats(); }
-                callback.receiveCallStatus(ok, "/tracking/begin");
+                if (ok) {
+                    tracking = true;
+                    startHeartbeats();
+                    callback.onSuccess(null);
+                } else {
+                    callback.onError("Error starting tracking");
+                }
             }
-        };
+        }.execute();
     }
 
-    public AsyncTask<Void, Void, Boolean> stopTrackingAsync(final ApiCallStatusReceiver callback) {
+    public void stopTrackingAsync(final ApiCallStatusReceiver<Void> callback) {
         nullCheck();
-        return new AsyncTask<Void, Void, Boolean>() {
+        new AsyncTask<Void, Void, Boolean>() {
             @Override
             protected Boolean doInBackground(Void... params) {
                 boolean success = false;
@@ -208,10 +214,14 @@ public class Backend implements
 
             @Override
             protected void onPostExecute(Boolean ok) {
-                if (ok) { tracking = false; }
-                callback.receiveCallStatus(ok, "/tracking/end");
+                if (ok) {
+                    tracking = false;
+                    callback.onSuccess(null);
+                } else {
+                    callback.onError("Error stopping tracking");
+                }
             }
-        };
+        }.execute();
     }
 
 

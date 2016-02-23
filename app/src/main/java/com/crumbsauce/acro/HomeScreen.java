@@ -1,5 +1,6 @@
 package com.crumbsauce.acro;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -27,7 +28,7 @@ import com.orhanobut.wasp.Wasp;
 
 public class HomeScreen extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, ApiCallStatusReceiver {
+        GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
 
     private GoogleApiClient mGoogleApiClient;
     private static final String LOG_TAG = "HOME_SCREEN";
@@ -151,30 +152,41 @@ public class HomeScreen extends AppCompatActivity
         switch (v.getId()) {
             case R.id.trackingToggle:
                 if (backend.isTracking()) {
-                    backend.stopTrackingAsync(this).execute();
+                    stopTracking();
                 } else {
-                    backend.startTrackingAsync(this).execute();
+                    startTracking();
                 }
                 break;
         }
     }
 
-    @Override
-    public void receiveCallStatus(boolean ok, String method) {
-        switch (method) {
-            case "/tracking/begin":
-                if (ok) {
-                    Util.makeToast(this, "Tracking started");
-                } else {
-                    Util.makeToast(this, "An error occurred starting tracking, please try again");
-                }
-                break;
-            case "/tracking/end":
-                if (ok) {
-                    Util.makeToast(this, "Tracking stopped");
-                } else {
-                    Util.makeToast(this, "An error occurred stopping tracking. please try again");
-                }
-        }
+    private void startTracking() {
+        final Context c = this;
+        backend.startTrackingAsync(new ApiCallStatusReceiver<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Util.makeToast(c, "Tracking started");
+            }
+
+            @Override
+            public void onError(String error) {
+                Util.makeToast(c, error);
+            }
+        });
+    }
+
+    private void stopTracking() {
+        final Context c = this;
+        backend.stopTrackingAsync(new ApiCallStatusReceiver<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Util.makeToast(c, "Tracking stopped");
+            }
+
+            @Override
+            public void onError(String error) {
+                Util.makeToast(c, error);
+            }
+        });
     }
 }
