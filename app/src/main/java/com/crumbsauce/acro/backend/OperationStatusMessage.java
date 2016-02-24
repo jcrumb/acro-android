@@ -1,6 +1,6 @@
 package com.crumbsauce.acro.backend;
 
 
-public class TrackingStatusMessage {
+public class OperationStatusMessage {
     public String message;
 }

@@ -10,6 +10,7 @@ import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -23,9 +24,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ManageContactsScreen extends AppCompatActivity implements OnClickListener, ApiCallStatusReceiver<Contact[]> {
+public class ManageContactsScreen extends AppCompatActivity
+        implements OnClickListener, ApiCallStatusReceiver<Contact[]>, AdapterView.OnItemLongClickListener {
     private static final String LOG_TAG = "MANAGE_CONTACTS";
     private Backend backend;
+    private Contact[] contacts;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +42,9 @@ public class ManageContactsScreen extends AppCompatActivity implements OnClickLi
 
         backend = new Backend(getApplicationContext(), Util.getSessionUserEmail(), Util.getSessionUserToken());
         backend.getContactsAsync(this);
+
+        ListView lv = (ListView) findViewById(R.id.contactsListView);
+        lv.setOnItemLongClickListener(this);
     }
 
     @Override
@@ -108,9 +115,12 @@ public class ManageContactsScreen extends AppCompatActivity implements OnClickLi
         });
     }
 
+    // ApiCallStatusReceiver
     @Override
     public void onSuccess(Contact[] result) {
         Log.d(LOG_TAG, String.format("Number of contacts: %d", result.length));
+
+        contacts = result;
 
         String[] from = { "name", "phone" };
         int[] to = { android.R.id.text1, android.R.id.text2 };
@@ -120,7 +130,6 @@ public class ManageContactsScreen extends AppCompatActivity implements OnClickLi
         ListView lv = (ListView) findViewById(R.id.contactsListView);
         lv.setAdapter(adapter);
         adapter.notifyDataSetChanged();
-        Log.d(LOG_TAG, String.format("ITEMS IN LISTVIEW: %d", lv.getCount()));
     }
 
     private ArrayList<Map<String, String>> formatContactArray(final Contact[] contacts) {
@@ -144,5 +153,42 @@ public class ManageContactsScreen extends AppCompatActivity implements OnClickLi
     @Override
     public void onError(String error) {
         Log.e(LOG_TAG, error);
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+        if (contacts == null) { return true; }
+
+        Log.d(LOG_TAG, String.format("Position: %d", position));
+        Log.d(LOG_TAG, String.format("Phone: %s", contacts[position].phoneNumber));
+
+        final ManageContactsScreen s = this;
+        AlertDialog.Builder prompt = new AlertDialog.Builder(this);
+
+        prompt.setTitle("Confirm");
+        prompt.setMessage("Are you sure you wish to remove this contact?");
+        prompt.setIcon(R.drawable.bike_icon);
+        prompt.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                backend.deleteContactAsync(contacts[position].phoneNumber, new ApiCallStatusReceiver<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        Util.makeToast(s, "Contact removed");
+                        backend.getContactsAsync(s);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Util.makeToast(s, "Error removing contact");
+                    }
+                });
+            }
+        });
+        prompt.setNegativeButton("No", null);
+
+        prompt.create().show();
+
+        return true;
     }
 }

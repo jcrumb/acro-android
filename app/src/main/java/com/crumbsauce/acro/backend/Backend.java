@@ -19,6 +19,7 @@ import com.orhanobut.wasp.utils.AuthToken;
 import com.orhanobut.wasp.utils.RequestInterceptor;
 import com.orhanobut.wasp.utils.WaspRetryPolicy;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.MediaType;
@@ -259,6 +260,21 @@ public class Backend implements
         acroService.createContact(userEmail, newContact, new Callback<Contact>() {
             @Override
             public void onSuccess(com.orhanobut.wasp.Response response, Contact contact) {
+                callback.onSuccess(null);
+            }
+
+            @Override
+            public void onError(WaspError error) {
+                callback.onError(error.getErrorMessage());
+            }
+        });
+    }
+
+    public void deleteContactAsync(final String phoneNumber, final ApiCallStatusReceiver<Void> callback) {
+
+        acroService.deleteContact(userEmail, phoneNumber, new Callback<OperationStatusMessage>() {
+            @Override
+            public void onSuccess(com.orhanobut.wasp.Response response, OperationStatusMessage operationStatusMessage) {
                 callback.onSuccess(null);
             }
 
