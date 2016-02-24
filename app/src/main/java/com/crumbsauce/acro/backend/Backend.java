@@ -12,7 +12,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.orhanobut.wasp.Callback;
 import com.orhanobut.wasp.Wasp;
+import com.orhanobut.wasp.WaspError;
 import com.orhanobut.wasp.utils.AuthToken;
 import com.orhanobut.wasp.utils.RequestInterceptor;
 import com.orhanobut.wasp.utils.WaspRetryPolicy;
@@ -40,11 +42,12 @@ public class Backend implements
     private static final String backendBaseURL = "http://192.168.0.34:5000";
     private static final String LOG_TAG = "BACKEND";
     public static final String ERROR_STRING = "ERR_BACKEND"; // Any of the methods that return String will return this value on error
+    private final String userEmail;
 
-    public Backend() {}
+    public Backend() { this.userEmail = ""; }
 
     public Backend(final Context applicationContext, final String userEmail, final String sessionToken) {
-
+        this.userEmail = userEmail;
         acroService = new Wasp.Builder(applicationContext)
                 .setEndpoint(backendBaseURL)
                 .setRequestInterceptor(new RequestInterceptor() {
@@ -224,6 +227,19 @@ public class Backend implements
         }.execute();
     }
 
+    public void getTrackingInfoAsync(final ApiCallStatusReceiver<TrackingInfo> callback) {
+        acroService.getTrackingInfo(userEmail, new Callback<TrackingInfo>() {
+            @Override
+            public void onSuccess(com.orhanobut.wasp.Response response, TrackingInfo trackingInfo) {
+                callback.onSuccess(trackingInfo);
+            }
+
+            @Override
+            public void onError(WaspError error) {
+                callback.onError(error.getErrorMessage());
+            }
+        });
+    }
 
     // Interface implementations for google api client
     @Override

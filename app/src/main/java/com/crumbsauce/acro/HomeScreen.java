@@ -109,15 +109,18 @@ public class HomeScreen extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
-        int id = item.getItemId();
-        if (id == R.id.nav_sign_out) {
-            signOut();
-        } else if (id == R.id.nav_share) {
+        switch (item.getItemId()) {
+            case R.id.nav_sign_out:
+                signOut();
+                break;
 
+            case R.id.nav_tracking_manage:
+                Intent i = new Intent(this, TrackingInfoScreen.class);
+                startActivity(i);
+                break;
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -156,6 +159,10 @@ public class HomeScreen extends AppCompatActivity
                 } else {
                     startTracking();
                 }
+                break;
+            case R.id.nav_contact_manage:
+                Intent i = new Intent(this, TrackingInfoScreen.class);
+                startActivity(i);
                 break;
         }
     }
