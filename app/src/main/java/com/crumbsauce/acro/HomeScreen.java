@@ -118,8 +118,13 @@ public class HomeScreen extends AppCompatActivity
                 break;
 
             case R.id.nav_tracking_manage:
-                Intent i = new Intent(this, TrackingInfoScreen.class);
-                startActivity(i);
+                Intent moveToTrackingInfo = new Intent(this, TrackingInfoScreen.class);
+                startActivity(moveToTrackingInfo);
+                break;
+
+            case R.id.nav_contact_manage:
+                Intent moveToManageContacts = new Intent(this, ManageContactsScreen.class);
+                startActivity(moveToManageContacts);
                 break;
         }
 

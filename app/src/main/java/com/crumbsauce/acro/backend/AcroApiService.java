@@ -19,4 +19,10 @@ public interface AcroApiService {
 
     @GET("/users/{email}/trackinginfo")
     void getTrackingInfo(@Path("email") String email, Callback<TrackingInfo> callback);
+
+    @GET("/users/{email}/contacts")
+    void getContacts(@Path("email") String email, Callback<Contact[]> callback);
+
+    @POST("/users/{email}/contacts")
+    void createContact(@Path("email") String email, @Body Contact newContact, Callback<Contact> callback);
 }

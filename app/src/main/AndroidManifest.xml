@@ -22,7 +22,11 @@
             android:name=".HomeScreen"
             android:label="@string/title_activity_home_screen"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".TrackingInfoScreen"></activity>
+        <activity android:name=".TrackingInfoScreen" />
+        <activity
+            android:name=".ManageContactsScreen"
+            android:label="@string/title_activity_manage_contacts_screen"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

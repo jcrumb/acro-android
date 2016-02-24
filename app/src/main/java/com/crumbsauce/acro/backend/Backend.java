@@ -241,6 +241,34 @@ public class Backend implements
         });
     }
 
+    public void getContactsAsync(final ApiCallStatusReceiver<Contact[]> callback) {
+        acroService.getContacts(userEmail, new Callback<Contact[]>() {
+            @Override
+            public void onSuccess(com.orhanobut.wasp.Response response, Contact[] contacts) {
+                callback.onSuccess(contacts);
+            }
+
+            @Override
+            public void onError(WaspError error) {
+                callback.onError(error.getErrorMessage());
+            }
+        });
+    }
+
+    public void createContactAsync(final Contact newContact, final ApiCallStatusReceiver<Void> callback) {
+        acroService.createContact(userEmail, newContact, new Callback<Contact>() {
+            @Override
+            public void onSuccess(com.orhanobut.wasp.Response response, Contact contact) {
+                callback.onSuccess(null);
+            }
+
+            @Override
+            public void onError(WaspError error) {
+                callback.onError(error.getErrorMessage());
+            }
+        });
+    }
+
     // Interface implementations for google api client
     @Override
     public void onConnected(Bundle bundle) {
