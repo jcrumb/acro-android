@@ -1,5 +1,7 @@
 package com.crumbsauce.acro;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,6 +21,7 @@ import android.widget.TextView;
 
 import com.crumbsauce.acro.backend.ApiCallStatusReceiver;
 import com.crumbsauce.acro.backend.Backend;
+import com.crumbsauce.acro.backend.TrackingInfo;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -33,6 +36,7 @@ public class HomeScreen extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private static final String LOG_TAG = "HOME_SCREEN";
     private Backend backend;
+    private Thread monitorThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,11 +130,34 @@ public class HomeScreen extends AppCompatActivity
                 Intent moveToManageContacts = new Intent(this, ManageContactsScreen.class);
                 startActivity(moveToManageContacts);
                 break;
+
+            case R.id.nav_share:
+                copyLinkToClipboard();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void copyLinkToClipboard() {
+
+        backend.getTrackingInfoAsync(new ApiCallStatusReceiver<TrackingInfo>() {
+            @Override
+            public void onSuccess(TrackingInfo result) {
+                ClipboardManager manager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                ClipData data = ClipData.newPlainText("Acro Tracking Info",
+                        String.format("%s PIN: %s", result.trackingUrl, result.trackingPin));
+                manager.setPrimaryClip(data);
+                Util.makeToast(getApplicationContext(), "Copied to clipboard");
+            }
+
+            @Override
+            public void onError(String error) {
+                Util.makeToast(getApplicationContext(), "Error getting tracking info");
+            }
+        });
+
     }
 
     private void signOut() {
@@ -173,10 +200,13 @@ public class HomeScreen extends AppCompatActivity
     }
 
     private void startTracking() {
-        final Context c = this;
+        final HomeScreen c = this;
+
         backend.startTrackingAsync(new ApiCallStatusReceiver<Void>() {
             @Override
             public void onSuccess(Void result) {
+                Thread backgroundThread = new Thread(new AccidentMonitor(c));
+                backgroundThread.start();
                 Util.makeToast(c, "Tracking started");
             }
 
@@ -188,10 +218,13 @@ public class HomeScreen extends AppCompatActivity
     }
 
     private void stopTracking() {
-        final Context c = this;
+        final HomeScreen c = this;
+        final Thread backgroundThread = this.monitorThread;
+
         backend.stopTrackingAsync(new ApiCallStatusReceiver<Void>() {
             @Override
             public void onSuccess(Void result) {
+                backgroundThread.interrupt();
                 Util.makeToast(c, "Tracking stopped");
             }
 
@@ -200,5 +233,9 @@ public class HomeScreen extends AppCompatActivity
                 Util.makeToast(c, error);
             }
         });
+    }
+
+    public void setAccidentMonitorThread(Thread t) {
+        monitorThread = t;
     }
 }
