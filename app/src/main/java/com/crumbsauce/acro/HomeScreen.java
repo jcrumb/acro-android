@@ -36,7 +36,7 @@ public class HomeScreen extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private static final String LOG_TAG = "HOME_SCREEN";
     private Backend backend;
-    private Thread monitorThread;
+    private MonitorServiceConnection serviceConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -199,14 +199,27 @@ public class HomeScreen extends AppCompatActivity
         }
     }
 
+    public void bindService() {
+        Log.d(LOG_TAG, "Binding service");
+        serviceConnection = new MonitorServiceConnection(this);
+        bindService(new Intent(this, AccidentMonitor.class), serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    public void unbindService() {
+        Log.d(LOG_TAG, "Unbinding service");
+        if (serviceConnection != null) {
+            unbindService(serviceConnection);
+            serviceConnection = null;
+        }
+    }
+
     private void startTracking() {
         final HomeScreen c = this;
 
         backend.startTrackingAsync(new ApiCallStatusReceiver<Void>() {
             @Override
             public void onSuccess(Void result) {
-                Thread backgroundThread = new Thread(new AccidentMonitor(c));
-                backgroundThread.start();
+                c.bindService();
                 Util.makeToast(c, "Tracking started");
             }
 
@@ -219,12 +232,11 @@ public class HomeScreen extends AppCompatActivity
 
     private void stopTracking() {
         final HomeScreen c = this;
-        final Thread backgroundThread = this.monitorThread;
 
         backend.stopTrackingAsync(new ApiCallStatusReceiver<Void>() {
             @Override
             public void onSuccess(Void result) {
-                backgroundThread.interrupt();
+                c.unbindService();
                 Util.makeToast(c, "Tracking stopped");
             }
 
@@ -235,7 +247,7 @@ public class HomeScreen extends AppCompatActivity
         });
     }
 
-    public void setAccidentMonitorThread(Thread t) {
-        monitorThread = t;
+    public void sendAlert() {
+        Util.makeToast(this, "Alert generated!");
     }
 }

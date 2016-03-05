@@ -39,8 +39,12 @@ public class Backend implements
     private static final int SECONDS = 1000;
     private static final int MINUTES = 60000;
 
+    // Configuration values
+    private static final String backendBaseURL = "https://api.getacro.com";
+    private static final int updateFreqDesired = 3 * MINUTES + 30 * SECONDS;
+    private static final int updateFreqMax = 2* MINUTES + 30 * SECONDS;
+
     private static boolean tracking;
-    private static final String backendBaseURL = "http://192.168.0.34:5000";
     private static final String LOG_TAG = "BACKEND";
     public static final String ERROR_STRING = "ERR_BACKEND"; // Any of the methods that return String will return this value on error
     private final String userEmail;
@@ -98,8 +102,8 @@ public class Backend implements
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient,
                 new LocationRequest()
-                .setInterval(30 * SECONDS)
-                .setFastestInterval(10 * SECONDS)
+                .setInterval(updateFreqDesired)
+                .setFastestInterval(updateFreqMax)
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY),
                 this
         );
