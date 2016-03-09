@@ -247,7 +247,24 @@ public class HomeScreen extends AppCompatActivity
         });
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        stopTracking();
+    }
+
     public void sendAlert() {
-        Util.makeToast(this, "Alert generated!");
+        backend.generateAlertAsync(new ApiCallStatusReceiver<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Util.makeToast(getApplicationContext(), "Alert sent");
+            }
+
+            @Override
+            public void onError(String error) {
+                Util.makeToast(getApplicationContext(), "Error sending alert");
+            }
+        });
     }
 }

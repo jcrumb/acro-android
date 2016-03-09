@@ -289,6 +289,20 @@ public class Backend implements
         });
     }
 
+    public void generateAlertAsync(final ApiCallStatusReceiver<Void> callback) {
+        acroService.generateAlert(getLastLocation(), new Callback<OperationStatusMessage>() {
+            @Override
+            public void onSuccess(com.orhanobut.wasp.Response response, OperationStatusMessage operationStatusMessage) {
+                callback.onSuccess(null);
+            }
+
+            @Override
+            public void onError(WaspError error) {
+                callback.onError(error.getErrorMessage());
+            }
+        });
+    }
+
     // Interface implementations for google api client
     @Override
     public void onConnected(Bundle bundle) {

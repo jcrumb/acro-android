@@ -29,6 +29,9 @@ public class AccidentMonitor extends Service implements SensorEventListener {
     private float lastY = 0.0f;
     private float lastZ = 0.0f;
 
+    private boolean onCooldown = false;
+    private int cooldownCountRemaining = 3;
+
     public class LocalBinder extends Binder {
         AccidentMonitor getService() {
             return AccidentMonitor.this;
@@ -90,13 +93,23 @@ public class AccidentMonitor extends Service implements SensorEventListener {
 
         final float forceThreshold = 3.0f;
         if (avgDeltaX > forceThreshold || avgDeltaY > forceThreshold || avgDeltaZ > forceThreshold) {
-            Log.d(LOG_TAG, "Alert generated");
+            if (!onCooldown) {
+                onCooldown = true;
+                cooldownCountRemaining = 3;
 
-            deltaXhistory.clear();
-            deltaYhistory.clear();
-            deltaZhistory.clear();
+                Log.d(LOG_TAG, "Alert generated");
 
-            callback.sendAlert();
+                deltaXhistory.clear();
+                deltaYhistory.clear();
+                deltaZhistory.clear();
+
+                callback.sendAlert();
+            } else {
+                cooldownCountRemaining--;
+                if (cooldownCountRemaining == 0) {
+                    onCooldown = false;
+                }
+            }
         }
     }
 

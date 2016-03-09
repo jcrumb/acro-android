@@ -32,4 +32,7 @@ public interface AcroApiService {
 
     @DELETE("/users/{email}/contacts")
     void deleteContact(@Path("email") String email, @Header("x-phone-number") String phoneNumber, Callback<OperationStatusMessage> callback);
+
+    @POST("/tracking/alert")
+    void generateAlert(@Body LocationString location, Callback<OperationStatusMessage> callback);
 }
