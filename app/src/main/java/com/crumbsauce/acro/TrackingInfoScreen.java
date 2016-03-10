@@ -15,6 +15,7 @@ import com.crumbsauce.acro.backend.TrackingInfo;
 
 public class TrackingInfoScreen extends AppCompatActivity {
     private static final String LOG_TAG = "TRACKING_INFO";
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,15 +33,15 @@ public class TrackingInfoScreen extends AppCompatActivity {
 
         backend.getTrackingInfoAsync(new ApiCallStatusReceiver<TrackingInfo>() {
             @Override
-            public void onSuccess(TrackingInfo result) {
-                code.setText(String.format("Tracking Code: %s", result.trackingId));
-                pin.setText(String.format("Tracking PIN: %s", result.trackingPin));
-            }
-
-            @Override
             public void onError(String error) {
                 Log.e(LOG_TAG, error);
                 Util.makeToast(activityContext, "Error getting tracking info");
+            }
+
+            @Override
+            public void onSuccess(TrackingInfo result) {
+                code.setText(String.format("Tracking Code: %s", result.trackingId));
+                pin.setText(String.format("Tracking PIN: %s", result.trackingPin));
             }
         });
     }

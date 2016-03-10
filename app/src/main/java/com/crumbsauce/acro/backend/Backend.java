@@ -19,7 +19,6 @@ import com.orhanobut.wasp.utils.AuthToken;
 import com.orhanobut.wasp.utils.RequestInterceptor;
 import com.orhanobut.wasp.utils.WaspRetryPolicy;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.MediaType;

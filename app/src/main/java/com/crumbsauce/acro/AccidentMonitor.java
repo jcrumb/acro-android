@@ -1,7 +1,6 @@
 package com.crumbsauce.acro;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -9,17 +8,18 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
-import android.os.Process;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class AccidentMonitor extends Service implements SensorEventListener {
     private static final String LOG_TAG = "BACKGROUND_THREAD";
+
+    private final IBinder mBinder = new LocalBinder();
+    private HomeScreen callback;
+
     private SensorManager sensorManager;
-    private Sensor linearAccelerometer;
 
     private ArrayBlockingQueue<Float> deltaXhistory = new ArrayBlockingQueue<>(3);
     private ArrayBlockingQueue<Float> deltaYhistory = new ArrayBlockingQueue<>(3);
@@ -32,41 +32,54 @@ public class AccidentMonitor extends Service implements SensorEventListener {
     private boolean onCooldown = false;
     private int cooldownCountRemaining = 3;
 
-    public class LocalBinder extends Binder {
-        AccidentMonitor getService() {
-            return AccidentMonitor.this;
+
+    private float calculateAverageChange(ArrayBlockingQueue<Float> deltaHistory, float delta) {
+        if (deltaHistory.remainingCapacity() != 0) {
+            deltaHistory.offer(delta);
+            return 0.0f;
         }
-    }
 
-    private final IBinder mBinder = new LocalBinder();
-    private HomeScreen callback;
+        deltaHistory.poll();
+        deltaHistory.offer(delta);
 
-    public void setNotificationCallback(HomeScreen callback) {
-        this.callback = callback;
+        float total = 0.0f;
+
+        //noinspection ToArrayCallWithZeroLengthArrayArgument
+        Float[] values = deltaHistory.toArray(new Float[0]);
+        for (Float f : values) {
+            total += f;
+        }
+
+        return total / values.length;
     }
 
     @Override
-    public void onDestroy() {
-        sensorManager.unregisterListener(this);
-        Log.d(LOG_TAG, "Service stopped");
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 
+    @Nullable
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "Start command received");
-        return START_STICKY;
+    public IBinder onBind(Intent intent) {
+        return mBinder;
     }
 
     @Override
     public void onCreate() {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        linearAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        Sensor linearAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         if (linearAccelerometer == null) {
             Log.d(LOG_TAG, "No default linear accelerometer found");
         }
         Log.d(LOG_TAG, "Service starting");
         sensorManager.registerListener(this, linearAccelerometer, 330000);
+    }
+
+    @Override
+    public void onDestroy() {
+        sensorManager.unregisterListener(this);
+        Log.d(LOG_TAG, "Service stopped");
     }
 
     @Override
@@ -103,7 +116,7 @@ public class AccidentMonitor extends Service implements SensorEventListener {
                 deltaYhistory.clear();
                 deltaZhistory.clear();
 
-                callback.sendAlert();
+                callback.promptForAlert();
             } else {
                 cooldownCountRemaining--;
                 if (cooldownCountRemaining == 0) {
@@ -113,34 +126,19 @@ public class AccidentMonitor extends Service implements SensorEventListener {
         }
     }
 
-    private float calculateAverageChange(ArrayBlockingQueue<Float> deltaHistory, float delta) {
-        if (deltaHistory.remainingCapacity() != 0) {
-            deltaHistory.offer(delta);
-            return 0.0f;
-        }
-
-        deltaHistory.poll();
-        deltaHistory.offer(delta);
-
-        float total = 0.0f;
-
-        //noinspection ToArrayCallWithZeroLengthArrayArgument
-        Float[] values = deltaHistory.toArray(new Float[0]);
-        for (Float f : values) {
-            total += f;
-        }
-
-        return total / values.length;
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(LOG_TAG, "Start command received");
+        return START_STICKY;
     }
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
+    public void setNotificationCallback(HomeScreen callback) {
+        this.callback = callback;
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
+    public class LocalBinder extends Binder {
+        AccidentMonitor getService() {
+            return AccidentMonitor.this;
+        }
     }
 }

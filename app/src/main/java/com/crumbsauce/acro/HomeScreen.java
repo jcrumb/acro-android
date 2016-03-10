@@ -1,10 +1,14 @@
 package com.crumbsauce.acro;
 
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -16,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 
@@ -33,10 +38,68 @@ public class HomeScreen extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
 
-    private GoogleApiClient mGoogleApiClient;
     private static final String LOG_TAG = "HOME_SCREEN";
+    private GoogleApiClient mGoogleApiClient;
     private Backend backend;
-    private MonitorServiceConnection serviceConnection;
+    private MonitoringServiceConnection serviceConnection;
+
+    public void bindService() {
+        Log.d(LOG_TAG, "Binding service");
+        serviceConnection = new MonitoringServiceConnection(this);
+        bindService(new Intent(this, AccidentMonitor.class), serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void copyLinkToClipboard() {
+
+        backend.getTrackingInfoAsync(new ApiCallStatusReceiver<TrackingInfo>() {
+            @Override
+            public void onError(String error) {
+                Util.makeToast(getApplicationContext(), "Error getting tracking info");
+            }
+
+            @Override
+            public void onSuccess(TrackingInfo result) {
+                ClipboardManager manager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                ClipData data = ClipData.newPlainText("Acro Tracking Info",
+                        String.format("%s PIN: %s", result.trackingUrl, result.trackingPin));
+                manager.setPrimaryClip(data);
+                Util.makeToast(getApplicationContext(), "Copied to clipboard");
+            }
+        });
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            startActivity(Util.navigateHome());
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.trackingToggle:
+                if (backend.isTracking()) {
+                    stopTracking();
+                } else {
+                    startTracking();
+                }
+                break;
+            case R.id.nav_contact_manage:
+                Intent i = new Intent(this, TrackingInfoScreen.class);
+                startActivity(i);
+                break;
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.e(LOG_TAG, "Error connecting: " + connectionResult);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,16 +145,6 @@ public class HomeScreen extends AppCompatActivity
     }
 
     @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            startActivity(Util.navigateHome());
-        }
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.home_screen, menu);
@@ -99,18 +152,10 @@ public class HomeScreen extends AppCompatActivity
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    protected void onDestroy() {
+        super.onDestroy();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        stopTracking();
     }
 
     @Override
@@ -140,24 +185,87 @@ public class HomeScreen extends AppCompatActivity
         return true;
     }
 
-    private void copyLinkToClipboard() {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
 
-        backend.getTrackingInfoAsync(new ApiCallStatusReceiver<TrackingInfo>() {
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void promptForAlert() {
+        final AlertDialog.Builder prompt = new AlertDialog.Builder(this);
+
+        prompt.setTitle("Are you alright?");
+        prompt.setIcon(R.drawable.bike_icon);
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+
+        final TextView timeoutText = new TextView(this);
+        timeoutText.setText("10");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            timeoutText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        }
+        layout.addView(timeoutText);
+
+        prompt.setView(layout);
+        prompt.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
-            public void onSuccess(TrackingInfo result) {
-                ClipboardManager manager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                ClipData data = ClipData.newPlainText("Acro Tracking Info",
-                        String.format("%s PIN: %s", result.trackingUrl, result.trackingPin));
-                manager.setPrimaryClip(data);
-                Util.makeToast(getApplicationContext(), "Copied to clipboard");
+            public void onClick(DialogInterface dialog, int which) {
+                Util.makeToast(getApplicationContext(), "Alert cleared");
             }
-
+        });
+        prompt.setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
-            public void onError(String error) {
-                Util.makeToast(getApplicationContext(), "Error getting tracking info");
+            public void onClick(DialogInterface dialog, int which) {
+                sendAlert();
             }
         });
 
+        final AlertDialog promptDialog = prompt.create();
+        promptDialog.show();
+
+        new CountDownTimer(10000, 1000) {
+            int secondsRemaining = 10;
+
+            @Override
+            public void onFinish() {
+                if (promptDialog.isShowing()) {
+                    promptDialog.dismiss();
+                    sendAlert();
+                }
+            }
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                if (promptDialog.isShowing()) {
+                    timeoutText.setText(String.valueOf(secondsRemaining));
+                    secondsRemaining--;
+                }
+            }
+        }.start();
+    }
+
+    public void sendAlert() {
+        backend.generateAlertAsync(new ApiCallStatusReceiver<Void>() {
+            @Override
+            public void onError(String error) {
+                Util.makeToast(getApplicationContext(), "Error sending alert");
+            }
+
+            @Override
+            public void onSuccess(Void result) {
+                Util.makeToast(getApplicationContext(), "Alert sent");
+            }
+        });
     }
 
     private void signOut() {
@@ -177,55 +285,19 @@ public class HomeScreen extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.e(LOG_TAG, "Error connecting: " + connectionResult);
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.trackingToggle:
-                if (backend.isTracking()) {
-                    stopTracking();
-                } else {
-                    startTracking();
-                }
-                break;
-            case R.id.nav_contact_manage:
-                Intent i = new Intent(this, TrackingInfoScreen.class);
-                startActivity(i);
-                break;
-        }
-    }
-
-    public void bindService() {
-        Log.d(LOG_TAG, "Binding service");
-        serviceConnection = new MonitorServiceConnection(this);
-        bindService(new Intent(this, AccidentMonitor.class), serviceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    public void unbindService() {
-        Log.d(LOG_TAG, "Unbinding service");
-        if (serviceConnection != null) {
-            unbindService(serviceConnection);
-            serviceConnection = null;
-        }
-    }
-
     private void startTracking() {
         final HomeScreen c = this;
 
         backend.startTrackingAsync(new ApiCallStatusReceiver<Void>() {
             @Override
-            public void onSuccess(Void result) {
-                c.bindService();
-                Util.makeToast(c, "Tracking started");
+            public void onError(String error) {
+                Util.makeToast(c, error);
             }
 
             @Override
-            public void onError(String error) {
-                Util.makeToast(c, error);
+            public void onSuccess(Void result) {
+                c.bindService();
+                Util.makeToast(c, "Tracking started");
             }
         });
     }
@@ -235,36 +307,23 @@ public class HomeScreen extends AppCompatActivity
 
         backend.stopTrackingAsync(new ApiCallStatusReceiver<Void>() {
             @Override
+            public void onError(String error) {
+                Util.makeToast(c, error);
+            }
+
+            @Override
             public void onSuccess(Void result) {
                 c.unbindService();
                 Util.makeToast(c, "Tracking stopped");
             }
-
-            @Override
-            public void onError(String error) {
-                Util.makeToast(c, error);
-            }
         });
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        stopTracking();
-    }
-
-    public void sendAlert() {
-        backend.generateAlertAsync(new ApiCallStatusReceiver<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                Util.makeToast(getApplicationContext(), "Alert sent");
-            }
-
-            @Override
-            public void onError(String error) {
-                Util.makeToast(getApplicationContext(), "Error sending alert");
-            }
-        });
+    public void unbindService() {
+        Log.d(LOG_TAG, "Unbinding service");
+        if (serviceConnection != null) {
+            unbindService(serviceConnection);
+            serviceConnection = null;
+        }
     }
 }

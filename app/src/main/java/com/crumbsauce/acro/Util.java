@@ -56,11 +56,11 @@ class Util {
         return sessionUserToken;
     }
 
-    public static String getSessionUserEmail() { return Util.getCurrentUserAccount().getEmail(); }
-
     public static void setSessionUserToken(String sessionUserToken) {
         Util.sessionUserToken = sessionUserToken;
     }
+
+    public static String getSessionUserEmail() { return Util.getCurrentUserAccount().getEmail(); }
 
     public static void makeToast(Context c, String text) {
         Toast.makeText(c, text, Toast.LENGTH_LONG).show();

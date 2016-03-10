@@ -21,37 +21,13 @@ public class AcroLogin extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener, LogInResultHandler {
 
-    private GoogleApiClient mGoogleApiClient;
     private static final int RC_SIGN_IN = 9001;
     private static final String LOG_TAG = "LOG_IN_OUT";
+
+    private GoogleApiClient mGoogleApiClient;
     private SignInButton signInButton;
+
     private Backend backend;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_acro_login);
-
-        findViewById(R.id.sign_in_button).setOnClickListener(this);
-
-        signInButton = (SignInButton) findViewById(R.id.sign_in_button);
-        mGoogleApiClient = Util.getGoogleApiClient(this, this , this);
-        backend = new Backend();
-
-        signInButton.setScopes(Util.getGoogleSignInOptions().getScopeArray());
-
-        Log.d(LOG_TAG, "onCreateFinished");
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.sign_in_button:
-                Log.v(LOG_TAG, "Sign in button triggered");
-                signIn();
-                break;
-        }
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -69,13 +45,34 @@ public class AcroLogin extends AppCompatActivity implements
     }
 
     @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.sign_in_button:
+                Log.v(LOG_TAG, "Sign in button triggered");
+                signIn();
+                break;
+        }
+    }
+
+    @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.e(LOG_TAG, "Connection failed: " + connectionResult);
     }
 
-    private void signIn() {
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_acro_login);
+
+        findViewById(R.id.sign_in_button).setOnClickListener(this);
+
+        signInButton = (SignInButton) findViewById(R.id.sign_in_button);
+        mGoogleApiClient = Util.getGoogleApiClient(this, this , this);
+        backend = new Backend();
+
+        signInButton.setScopes(Util.getGoogleSignInOptions().getScopeArray());
+
+        Log.d(LOG_TAG, "onCreateFinished");
     }
 
     private void processSignInResult(Intent data) {
@@ -115,5 +112,10 @@ public class AcroLogin extends AppCompatActivity implements
             Intent moveToMainScreen = new Intent(getApplicationContext(), HomeScreen.class);
             startActivity(moveToMainScreen);
         }
+    }
+
+    private void signIn() {
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 }

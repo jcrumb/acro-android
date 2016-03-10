@@ -26,34 +26,34 @@ import java.util.Map;
 
 public class ManageContactsScreen extends AppCompatActivity
         implements OnClickListener, ApiCallStatusReceiver<Contact[]>, AdapterView.OnItemLongClickListener {
+
     private static final String LOG_TAG = "MANAGE_CONTACTS";
     private Backend backend;
     private Contact[] contacts;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_manage_contacts_screen);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+    private void addContactToList(Contact newContact) {
+        final ManageContactsScreen s = this;
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(this);
+        backend.createContactAsync(newContact, new ApiCallStatusReceiver<Void>() {
+            @Override
+            public void onError(String error) {
+                Log.e(LOG_TAG, error);
+            }
 
-        backend = new Backend(getApplicationContext(), Util.getSessionUserEmail(), Util.getSessionUserToken());
-        backend.getContactsAsync(this);
-
-        ListView lv = (ListView) findViewById(R.id.contactsListView);
-        lv.setOnItemLongClickListener(this);
+            @Override
+            public void onSuccess(Void result) {
+                backend.getContactsAsync(s);
+            }
+        });
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.fab:
-                createContact();
-                break;
-        }
+    private HashMap<String, String> contactToHash(Contact c) {
+        HashMap<String, String> item = new HashMap<>();
+
+        item.put("name", String.format("%s %s", c.firstName, c.lastName));
+        item.put("phone", c.phoneNumber);
+
+        return item;
     }
 
     private void createContact() {
@@ -99,39 +99,6 @@ public class ManageContactsScreen extends AppCompatActivity
         prompt.create().show();
     }
 
-    private void addContactToList(Contact newContact) {
-        final ManageContactsScreen s = this;
-
-        backend.createContactAsync(newContact, new ApiCallStatusReceiver<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                backend.getContactsAsync(s);
-            }
-
-            @Override
-            public void onError(String error) {
-                Log.e(LOG_TAG, error);
-            }
-        });
-    }
-
-    // ApiCallStatusReceiver
-    @Override
-    public void onSuccess(Contact[] result) {
-        Log.d(LOG_TAG, String.format("Number of contacts: %d", result.length));
-
-        contacts = result;
-
-        String[] from = { "name", "phone" };
-        int[] to = { android.R.id.text1, android.R.id.text2 };
-
-        SimpleAdapter adapter = new SimpleAdapter(this, formatContactArray(result),
-                android.R.layout.simple_list_item_2, from, to);
-        ListView lv = (ListView) findViewById(R.id.contactsListView);
-        lv.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-    }
-
     private ArrayList<Map<String, String>> formatContactArray(final Contact[] contacts) {
         ArrayList<Map<String, String>> list = new ArrayList<>();
         for (Contact contact : contacts) {
@@ -141,13 +108,30 @@ public class ManageContactsScreen extends AppCompatActivity
         return list;
     }
 
-    private HashMap<String, String> contactToHash(Contact c) {
-        HashMap<String, String> item = new HashMap<>();
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.fab:
+                createContact();
+                break;
+        }
+    }
 
-        item.put("name", String.format("%s %s", c.firstName, c.lastName));
-        item.put("phone", c.phoneNumber);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_manage_contacts_screen);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        return item;
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(this);
+
+        backend = new Backend(getApplicationContext(), Util.getSessionUserEmail(), Util.getSessionUserToken());
+        backend.getContactsAsync(this);
+
+        ListView lv = (ListView) findViewById(R.id.contactsListView);
+        lv.setOnItemLongClickListener(this);
     }
 
     @Override
@@ -173,14 +157,14 @@ public class ManageContactsScreen extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 backend.deleteContactAsync(contacts[position].phoneNumber, new ApiCallStatusReceiver<Void>() {
                     @Override
-                    public void onSuccess(Void result) {
-                        Util.makeToast(s, "Contact removed");
-                        backend.getContactsAsync(s);
+                    public void onError(String error) {
+                        Util.makeToast(s, "Error removing contact");
                     }
 
                     @Override
-                    public void onError(String error) {
-                        Util.makeToast(s, "Error removing contact");
+                    public void onSuccess(Void result) {
+                        Util.makeToast(s, "Contact removed");
+                        backend.getContactsAsync(s);
                     }
                 });
             }
@@ -190,5 +174,22 @@ public class ManageContactsScreen extends AppCompatActivity
         prompt.create().show();
 
         return true;
+    }
+
+    // ApiCallStatusReceiver
+    @Override
+    public void onSuccess(Contact[] result) {
+        Log.d(LOG_TAG, String.format("Number of contacts: %d", result.length));
+
+        contacts = result;
+
+        String[] from = { "name", "phone" };
+        int[] to = { android.R.id.text1, android.R.id.text2 };
+
+        SimpleAdapter adapter = new SimpleAdapter(this, formatContactArray(result),
+                android.R.layout.simple_list_item_2, from, to);
+        ListView lv = (ListView) findViewById(R.id.contactsListView);
+        lv.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
     }
 }
