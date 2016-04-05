@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="wasp-1.15">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.github.orhanobut/wasp/1.15/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.github.orhanobut/wasp/1.15/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.orhanobut/wasp/1.15/a5d462145d7aa8c94b7b66bd9be6b60426c6f992/wasp-1.15-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
