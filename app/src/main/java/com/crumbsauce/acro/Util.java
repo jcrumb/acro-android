@@ -63,7 +63,7 @@ class Util {
     public static String getSessionUserEmail() { return Util.getCurrentUserAccount().getEmail(); }
 
     public static void makeToast(Context c, String text) {
-        Toast.makeText(c, text, Toast.LENGTH_LONG).show();
+        Toast.makeText(c, text, Toast.LENGTH_SHORT).show();
     }
 
     private static void initSettings() {

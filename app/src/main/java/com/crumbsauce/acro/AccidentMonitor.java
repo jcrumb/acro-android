@@ -1,5 +1,8 @@
 package com.crumbsauce.acro;
 
+import android.app.NotificationManager;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -9,6 +12,7 @@ import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -31,6 +35,8 @@ public class AccidentMonitor extends Service implements SensorEventListener {
 
     private boolean onCooldown = false;
     private int cooldownCountRemaining = 3;
+
+    private int notificationID = 8228;
 
 
     private float calculateAverageChange(ArrayBlockingQueue<Float> deltaHistory, float delta) {
@@ -72,12 +78,35 @@ public class AccidentMonitor extends Service implements SensorEventListener {
         if (linearAccelerometer == null) {
             Log.d(LOG_TAG, "No default linear accelerometer found");
         }
+
+        Intent intent = new Intent(getApplicationContext(), HomeScreen.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.bike_icon)
+                .setContentTitle("Acro Monitor")
+                .setContentText("Acro monitoring service is running")
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .setPriority(Notification.PRIORITY_DEFAULT)
+                .setOngoing(true)
+                .setContentIntent(PendingIntent.getActivity(
+                                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
+                        ));
+
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        manager.notify(notificationID, builder.build());
+
+
         Log.d(LOG_TAG, "Service starting");
         sensorManager.registerListener(this, linearAccelerometer, 330000);
     }
 
     @Override
     public void onDestroy() {
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        manager.cancel(notificationID);
+
         sensorManager.unregisterListener(this);
         Log.d(LOG_TAG, "Service stopped");
     }
